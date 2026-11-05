@@ -1,0 +1,38 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: study-assistant
+
+llm:
+  # mock = 无 Key 也能跑通全链路；openai-compat = DeepSeek / 通义 / Kimi / 硅基流动 等 OpenAI 兼容接口
+  provider: ${LLM_PROVIDER:mock}
+  base-url: ${LLM_BASE_URL:https://api.deepseek.com/v1}
+  api-key: ${LLM_API_KEY:}
+  # 主力对话模型（质量优先）
+  model: ${LLM_MODEL:deepseek-chat}
+  # 辅助任务模型（延迟/成本优先）：标题、query 改写、上下文摘要。留空则复用主模型
+  fast-model: ${LLM_FAST_MODEL:}
+  temperature: 0.7
+  connect-timeout-seconds: 10
+  # 主模型思考预算（token）：限制推理长度，实测限 512 快 47%。不想限制就删掉这行
+  thinking-budget: ${LLM_THINKING_BUDGET:1024}
+  # 上下文窗口控制：保留最近 N 轮；超出的部分由快模型压缩成摘要，而不是直接丢弃
+  max-history-turns: 20
+  system-prompt: |
+    你是一名软考中级备考助手。回答要求：
+    1. 先给结论，再给依据；专业术语保留英文原文。
+    2. 涉及知识点时标注所属章节，便于用户回查教材。
+    3. 不确定的内容明确说不确定，不要编造。
+    4. 用中文回答，数学公式用 $...$ 包裹。
+  # 每百万 token 人民币单价，仅用于成本核算。换模型时同步改这里
+  pricing:
+    input: ${LLM_PRICE_IN:2.0}
+    output: ${LLM_PRICE_OUT:8.0}
+    fast-input: ${LLM_FAST_PRICE_IN:0.7}
+    fast-output: ${LLM_FAST_PRICE_OUT:2.1}
+
+logging:
+  level:
+    com.nanshan.study: DEBUG
